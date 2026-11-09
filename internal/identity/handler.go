@@ -34,7 +34,10 @@ func (h *handler) registerUser(c *echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
-	session, err := h.identity.Register(c.Request().Context(), request.Username, request.Email, request.Password)
+	session, err := h.identity.Register(c.Request().Context(), request.Username, request.Email, request.Password, usecases.Client{
+		IP:        c.RealIP(),
+		UserAgent: c.Request().UserAgent(),
+	})
 	if errors.Is(err, usecases.ErrUserExists) {
 		return c.JSON(http.StatusConflict, map[string]string{"error": "User already exists"})
 	}

@@ -3,6 +3,7 @@ package authentication
 import (
 	"errors"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/go-playground/validator/v10"
@@ -23,6 +24,10 @@ func (h *handler) register(e *echo.Echo) {
 	e.POST("/login", h.login)
 	e.POST("/refresh-token", h.refreshToken)
 	e.POST("/logout", h.logout)
+	e.POST("/logout-all", h.logoutAll)
+	e.GET("/sessions", h.sessions)
+	e.POST("/sessions/revoke-others", h.revokeOtherSessions)
+	e.POST("/sessions/:id/revoke", h.revokeSession)
 }
 
 func (h *handler) login(c *echo.Context) error {
@@ -34,7 +39,7 @@ func (h *handler) login(c *echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
-	session, err := h.auth.Login(c.Request().Context(), request.Username, request.Password)
+	session, err := h.auth.Login(c.Request().Context(), request.Username, request.Password, clientFrom(c))
 	if errors.Is(err, usecases.ErrInvalidCredentials) {
 		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Invalid username or password"})
 	}
@@ -95,6 +100,93 @@ func (h *handler) logout(c *echo.Context) error {
 	})
 }
 
+func (h *handler) logoutAll(c *echo.Context) error {
+	raw, err := bearerToken(c)
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Invalid token"})
+	}
+	err = h.auth.LogoutAll(c.Request().Context(), raw)
+	if errors.Is(err, usecases.ErrInvalidToken) {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Invalid token"})
+	}
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+	return c.JSON(http.StatusOK, map[string]string{
+		"code":    "0000",
+		"message": "Logged out of all sessions",
+	})
+}
+
+func (h *handler) sessions(c *echo.Context) error {
+	raw, err := bearerToken(c)
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Invalid token"})
+	}
+	sessions, err := h.auth.Sessions(c.Request().Context(), raw)
+	if errors.Is(err, usecases.ErrInvalidToken) {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Invalid token"})
+	}
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+	return c.JSON(http.StatusOK, sessionsResponse{
+		Code:    "0000",
+		Message: "Sessions",
+		Data:    sessions,
+	})
+}
+
+func (h *handler) revokeSession(c *echo.Context) error {
+	raw, err := bearerToken(c)
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Invalid token"})
+	}
+	sessionID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil || sessionID <= 0 {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid session"})
+	}
+	err = h.auth.RevokeSession(c.Request().Context(), raw, sessionID)
+	if errors.Is(err, usecases.ErrInvalidToken) {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Invalid token"})
+	}
+	if errors.Is(err, usecases.ErrCurrentSession) {
+		return c.JSON(http.StatusConflict, map[string]string{"error": "Cannot revoke the current session"})
+	}
+	if errors.Is(err, usecases.ErrSessionNotFound) {
+		return c.JSON(http.StatusNotFound, map[string]string{"error": "Session not found"})
+	}
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+	return c.JSON(http.StatusOK, map[string]string{
+		"code":    "0000",
+		"message": "Session revoked",
+	})
+}
+
+func (h *handler) revokeOtherSessions(c *echo.Context) error {
+	raw, err := bearerToken(c)
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Invalid token"})
+	}
+	err = h.auth.RevokeOtherSessions(c.Request().Context(), raw)
+	if errors.Is(err, usecases.ErrInvalidToken) {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Invalid token"})
+	}
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+	return c.JSON(http.StatusOK, map[string]string{
+		"code":    "0000",
+		"message": "Other sessions revoked",
+	})
+}
+
+func clientFrom(c *echo.Context) usecases.Client {
+	return usecases.Client{IP: c.RealIP(), UserAgent: c.Request().UserAgent()}
+}
+
 func bearerToken(c *echo.Context) (string, error) {
 	header := c.Request().Header.Get("Authorization")
 	const prefix = "Bearer "
@@ -119,4 +211,10 @@ type tokenResponse struct {
 	Data         any    `json:"data"`
 	Token        string `json:"token"`
 	RefreshToken string `json:"refresh_token"`
+}
+
+type sessionsResponse struct {
+	Code    string                 `json:"code"`
+	Message string                 `json:"message"`
+	Data    []usecases.SessionInfo `json:"data"`
 }

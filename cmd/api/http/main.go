@@ -6,14 +6,15 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/labstack/echo/v5"
-	"github.com/labstack/echo/v5/middleware"
 	"jozery/internal/authentication"
 	auth "jozery/internal/authentication/usecases"
 	"jozery/internal/identity"
 	"jozery/internal/identity/usecases"
 	"jozery/lib/db/pgsql"
+
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/labstack/echo/v5"
+	"github.com/labstack/echo/v5/middleware"
 )
 
 func main() {
@@ -23,21 +24,10 @@ func main() {
 	}
 	defer db.Close()
 
-	if err := identity.Migrate(context.Background(), db); err != nil {
-		log.Fatalf("identity migrations: %v", err)
-	}
-	if err := authentication.Migrate(context.Background(), db); err != nil {
-		log.Fatalf("authentication migrations: %v", err)
-	}
-
 	e := echo.New()
 
 	e.Use(middleware.RequestLogger())
 	e.Use(middleware.Recover())
-
-	e.GET("/", func(c *echo.Context) error {
-		return c.String(http.StatusOK, "Hello, World!\n")
-	})
 
 	e.GET("/health", func(c *echo.Context) error {
 		return health(c, db)
@@ -78,8 +68,11 @@ type sessionAdapter struct {
 	auth *authentication.Module
 }
 
-func (a *sessionAdapter) Login(ctx context.Context, username, password string) (usecases.Session, error) {
-	access, refresh, err := a.auth.Login(ctx, username, password)
+func (a *sessionAdapter) Login(ctx context.Context, username, password string, client usecases.Client) (usecases.Session, error) {
+	access, refresh, err := a.auth.Login(ctx, username, password, auth.Client{
+		IP:        client.IP,
+		UserAgent: client.UserAgent,
+	})
 	if err != nil {
 		return usecases.Session{}, err
 	}

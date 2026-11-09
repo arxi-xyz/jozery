@@ -20,8 +20,8 @@ func New(e *echo.Echo, pool *pgxpool.Pool, users usecases.CredentialsFinder) *Mo
 	return &Module{service: service}
 }
 
-func (m *Module) Login(ctx context.Context, username, password string) (string, string, error) {
-	session, err := m.service.Login(ctx, username, password)
+func (m *Module) Login(ctx context.Context, username, password string, client usecases.Client) (string, string, error) {
+	session, err := m.service.Login(ctx, username, password, client)
 	if err != nil {
 		return "", "", err
 	}

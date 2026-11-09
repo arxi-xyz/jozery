@@ -17,3 +17,11 @@ func (s *Service) Logout(ctx context.Context, accessToken string) error {
 	}
 	return err
 }
+
+func (s *Service) LogoutAll(ctx context.Context, accessToken string) error {
+	userID, err := s.UserID(ctx, accessToken)
+	if err != nil {
+		return err
+	}
+	return s.repo.RevokeUser(ctx, userID)
+}

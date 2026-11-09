@@ -1,0 +1,6 @@
+ALTER TABLE tokens
+    DROP COLUMN IF EXISTS ip,
+    DROP COLUMN IF EXISTS user_agent,
+    DROP COLUMN IF EXISTS device,
+    DROP COLUMN IF EXISTS location,
+    DROP COLUMN IF EXISTS logged_in_at;

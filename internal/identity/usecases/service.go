@@ -17,8 +17,13 @@ type Session struct {
 	RefreshToken string
 }
 
+type Client struct {
+	IP        string
+	UserAgent string
+}
+
 type Tokens interface {
-	Login(ctx context.Context, username, password string) (Session, error)
+	Login(ctx context.Context, username, password string, client Client) (Session, error)
 	UserID(ctx context.Context, accessToken string) (int64, error)
 }
 

@@ -9,7 +9,7 @@ import (
 	"jozery/internal/identity/entity"
 )
 
-func (s *Service) Register(ctx context.Context, username, email, password string) (*Session, error) {
+func (s *Service) Register(ctx context.Context, username, email, password string, client Client) (*Session, error) {
 	hash, err := entity.HashPassword(password)
 	if err != nil {
 		return nil, err
@@ -26,7 +26,7 @@ func (s *Service) Register(ctx context.Context, username, email, password string
 	if _, err := s.repo.CreateUser(ctx, username, email, hash); err != nil {
 		return nil, fmt.Errorf("register user: %w", err)
 	}
-	session, err := s.tokens.Login(ctx, username, password)
+	session, err := s.tokens.Login(ctx, username, password, client)
 	if err != nil {
 		return nil, err
 	}

@@ -16,38 +16,34 @@ func (s *Service) Refresh(ctx context.Context, raw string) (*Session, error) {
 
 	var session *Session
 	err = s.repo.WithinTx(ctx, func(tx db.Repository) error {
-		userID, err := tx.FindActiveRefreshUserID(ctx, raw)
+		current, err := tx.FindActiveRefresh(ctx, raw)
 		if errors.Is(err, db.ErrNotFound) {
 			return ErrInvalidToken
 		}
 		if err != nil {
 			return err
 		}
-		if userID != claims.UserID {
+		if current.UserID != claims.UserID {
 			return ErrInvalidToken
 		}
 
-		access, refresh, accessExp, refreshExp, err := signTokenPair(userID)
+		access, refresh, accessExp, refreshExp, err := signTokenPair(current.UserID)
 		if err != nil {
 			return err
 		}
-		if err := tx.RevokeRefresh(ctx, raw); err != nil {
-			if errors.Is(err, db.ErrNotFound) {
-				return ErrInvalidToken
-			}
-			return err
-		}
-		if err := tx.SaveToken(ctx, entity.Token{
-			UserID:           userID,
+		if err := tx.RotateToken(ctx, current.ID, entity.Token{
 			AccessToken:      access,
 			RefreshToken:     refresh,
 			AccessExpiresAt:  accessExp,
 			RefreshExpiresAt: refreshExp,
 		}); err != nil {
+			if errors.Is(err, db.ErrNotFound) {
+				return ErrInvalidToken
+			}
 			return err
 		}
 
-		session = &Session{AccessToken: access, RefreshToken: refresh, UserID: userID}
+		session = &Session{AccessToken: access, RefreshToken: refresh, UserID: current.UserID}
 		return nil
 	})
 	if err != nil {

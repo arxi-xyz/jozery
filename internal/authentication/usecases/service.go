@@ -12,6 +12,8 @@ var (
 	ErrInvalidCredentials  = errors.New("invalid credentials")
 	ErrInvalidToken        = errors.New("invalid token")
 	ErrCredentialsNotFound = errors.New("credentials not found")
+	ErrCurrentSession      = errors.New("current session")
+	ErrSessionNotFound     = errors.New("session not found")
 )
 
 type Credentials struct {
@@ -38,7 +40,7 @@ func New(repo db.Repository, users CredentialsFinder) *Service {
 	return &Service{repo: repo, users: users}
 }
 
-func (s *Service) issueSession(ctx context.Context, userID int64) (*Session, error) {
+func (s *Service) issueSession(ctx context.Context, userID int64, meta sessionMeta) (*Session, error) {
 	access, refresh, accessExp, refreshExp, err := signTokenPair(userID)
 	if err != nil {
 		return nil, err
@@ -49,6 +51,11 @@ func (s *Service) issueSession(ctx context.Context, userID int64) (*Session, err
 		RefreshToken:     refresh,
 		AccessExpiresAt:  accessExp,
 		RefreshExpiresAt: refreshExp,
+		IP:               meta.IP,
+		UserAgent:        meta.UserAgent,
+		Device:           meta.Device,
+		Location:         meta.Location,
+		LoggedInAt:       meta.LoggedInAt,
 	})
 	if err != nil {
 		return nil, err
@@ -57,20 +64,28 @@ func (s *Service) issueSession(ctx context.Context, userID int64) (*Session, err
 }
 
 func (s *Service) UserID(ctx context.Context, raw string) (int64, error) {
-	claims, err := parseToken(raw, tokenTypeAccess)
-	if err != nil {
-		return 0, ErrInvalidToken
-	}
-
-	userID, err := s.repo.FindActiveAccessUserID(ctx, raw)
-	if errors.Is(err, db.ErrNotFound) {
-		return 0, ErrInvalidToken
-	}
+	token, err := s.currentSession(ctx, raw)
 	if err != nil {
 		return 0, err
 	}
-	if userID != claims.UserID {
-		return 0, ErrInvalidToken
+	return token.UserID, nil
+}
+
+func (s *Service) currentSession(ctx context.Context, raw string) (entity.Token, error) {
+	claims, err := parseToken(raw, tokenTypeAccess)
+	if err != nil {
+		return entity.Token{}, ErrInvalidToken
 	}
-	return userID, nil
+
+	token, err := s.repo.FindActiveAccess(ctx, raw)
+	if errors.Is(err, db.ErrNotFound) {
+		return entity.Token{}, ErrInvalidToken
+	}
+	if err != nil {
+		return entity.Token{}, err
+	}
+	if token.UserID != claims.UserID {
+		return entity.Token{}, ErrInvalidToken
+	}
+	return token, nil
 }
