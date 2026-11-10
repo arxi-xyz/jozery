@@ -4,8 +4,8 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
-	"jozery/internal/Domains/authentication"
-	"jozery/internal/Domains/identity"
+	"jozery/internal/domains/authentication"
+	"jozery/internal/domains/identity"
 )
 
 func Mount(e *echo.Echo, pool *pgxpool.Pool) {

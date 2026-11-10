@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"jozery/internal/Domains/authentication"
-	"jozery/internal/Domains/identity"
+	"jozery/internal/domains/authentication"
+	"jozery/internal/domains/identity"
 )
 
 type migration struct {

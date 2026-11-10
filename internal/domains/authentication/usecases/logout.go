@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"jozery/internal/Domains/authentication/db"
+	"jozery/internal/domains/authentication/db"
 )
 
 func (s *Service) Logout(ctx context.Context, accessToken string) error {

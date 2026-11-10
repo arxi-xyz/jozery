@@ -2,9 +2,7 @@ package main
 
 import (
 	"context"
-	"errors"
 	"log"
-	"net/http"
 
 	"github.com/labstack/echo/v5"
 	"jozery/internal/app"
@@ -20,7 +18,7 @@ func main() {
 
 	e := echo.New()
 	app.Mount(e, db)
-	if err := e.Start(":8080"); err != nil && !errors.Is(err, http.ErrServerClosed) {
+	if err := app.Serve(e, ":8080"); err != nil {
 		log.Fatal(err)
 	}
 }

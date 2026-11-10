@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/labstack/echo/v5"
-	"jozery/internal/Domains/authentication/usecases"
-	"jozery/internal/httpctx"
+	"jozery/internal/domains/authentication/usecases"
+	"jozery/internal/requestctx"
 )
 
 type sessionReader interface {
@@ -29,7 +29,7 @@ func authenticate(sessions sessionReader) echo.MiddlewareFunc {
 			if err != nil {
 				return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 			}
-			c.SetRequest(c.Request().WithContext(httpctx.With(c.Request().Context(), userID, raw)))
+			c.SetRequest(c.Request().WithContext(requestctx.With(c.Request().Context(), userID, raw)))
 			return next(c)
 		}
 	}

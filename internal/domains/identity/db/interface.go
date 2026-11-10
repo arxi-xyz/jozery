@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"jozery/internal/Domains/identity/entity"
+	"jozery/internal/domains/identity/entity"
 )
 
 var ErrNotFound = errors.New("not found")

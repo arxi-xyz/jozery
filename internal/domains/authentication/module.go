@@ -5,8 +5,8 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/labstack/echo/v5"
-	"jozery/internal/Domains/authentication/db"
-	"jozery/internal/Domains/authentication/usecases"
+	"jozery/internal/domains/authentication/db"
+	"jozery/internal/domains/authentication/usecases"
 )
 
 type Module struct {

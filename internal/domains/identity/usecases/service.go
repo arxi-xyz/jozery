@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"jozery/internal/Domains/identity/db"
+	"jozery/internal/domains/identity/db"
 )
 
 var (

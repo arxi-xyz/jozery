@@ -7,8 +7,8 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v5"
-	"jozery/internal/Domains/authentication/usecases"
-	"jozery/internal/httpctx"
+	"jozery/internal/domains/authentication/usecases"
+	"jozery/internal/requestctx"
 )
 
 type handler struct {
@@ -188,7 +188,7 @@ func clientFrom(c *echo.Context) usecases.Client {
 }
 
 func accessToken(c *echo.Context) (string, error) {
-	raw, ok := httpctx.AccessToken(c.Request().Context())
+	raw, ok := requestctx.AccessToken(c.Request().Context())
 	if !ok {
 		return "", usecases.ErrInvalidToken
 	}

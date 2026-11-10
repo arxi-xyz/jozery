@@ -6,9 +6,9 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v5"
-	"jozery/internal/Domains/identity/entity"
-	"jozery/internal/Domains/identity/usecases"
-	"jozery/internal/httpctx"
+	"jozery/internal/domains/identity/entity"
+	"jozery/internal/domains/identity/usecases"
+	"jozery/internal/requestctx"
 )
 
 type handler struct {
@@ -56,7 +56,7 @@ func (h *handler) registerUser(c *echo.Context) error {
 }
 
 func (h *handler) profile(c *echo.Context) error {
-	userID, ok := httpctx.UserID(c.Request().Context())
+	userID, ok := requestctx.UserID(c.Request().Context())
 	if !ok {
 		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Invalid token"})
 	}

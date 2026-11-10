@@ -4,10 +4,10 @@ import (
 	"context"
 	"errors"
 
-	"jozery/internal/Domains/authentication"
-	auth "jozery/internal/Domains/authentication/usecases"
-	"jozery/internal/Domains/identity"
-	"jozery/internal/Domains/identity/usecases"
+	"jozery/internal/domains/authentication"
+	auth "jozery/internal/domains/authentication/usecases"
+	"jozery/internal/domains/identity"
+	"jozery/internal/domains/identity/usecases"
 )
 
 type credentialsAdapter struct {

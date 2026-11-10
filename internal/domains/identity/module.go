@@ -6,8 +6,8 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/labstack/echo/v5"
-	"jozery/internal/Domains/identity/db"
-	"jozery/internal/Domains/identity/usecases"
+	"jozery/internal/domains/identity/db"
+	"jozery/internal/domains/identity/usecases"
 )
 
 var ErrNotFound = db.ErrNotFound

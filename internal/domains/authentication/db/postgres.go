@@ -7,7 +7,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"jozery/internal/Domains/authentication/entity"
+	"jozery/internal/domains/authentication/entity"
 )
 
 type Postgres struct {

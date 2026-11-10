@@ -7,15 +7,15 @@ import (
 	"testing"
 
 	"github.com/labstack/echo/v5"
-	"jozery/internal/Domains/authentication/usecases"
-	"jozery/internal/httpctx"
+	"jozery/internal/domains/authentication/usecases"
+	"jozery/internal/requestctx"
 )
 
 func TestAuthenticateStoresUser(t *testing.T) {
 	e := echo.New()
 	e.GET("/profile", func(c *echo.Context) error {
-		userID, ok := httpctx.UserID(c.Request().Context())
-		token, tokenOK := httpctx.AccessToken(c.Request().Context())
+		userID, ok := requestctx.UserID(c.Request().Context())
+		token, tokenOK := requestctx.AccessToken(c.Request().Context())
 		if !ok || !tokenOK || userID != 7 || token != "access" {
 			return c.NoContent(http.StatusForbidden)
 		}
