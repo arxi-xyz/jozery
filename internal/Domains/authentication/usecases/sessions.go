@@ -5,8 +5,8 @@ import (
 	"errors"
 	"time"
 
-	"jozery/internal/authentication/db"
-	"jozery/internal/authentication/entity"
+	"jozery/internal/Domains/authentication/db"
+	"jozery/internal/Domains/authentication/entity"
 )
 
 type SessionInfo struct {

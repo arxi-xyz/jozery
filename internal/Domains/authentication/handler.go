@@ -4,11 +4,11 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v5"
-	"jozery/internal/authentication/usecases"
+	"jozery/internal/Domains/authentication/usecases"
+	"jozery/internal/httpctx"
 )
 
 type handler struct {
@@ -20,14 +20,14 @@ func newHandler(auth *usecases.Service) *handler {
 	return &handler{auth: auth, validate: validator.New()}
 }
 
-func (h *handler) register(e *echo.Echo) {
+func (h *handler) register(e *echo.Echo, protected echo.MiddlewareFunc) {
 	e.POST("/login", h.login)
 	e.POST("/refresh-token", h.refreshToken)
-	e.POST("/logout", h.logout)
-	e.POST("/logout-all", h.logoutAll)
-	e.GET("/sessions", h.sessions)
-	e.POST("/sessions/revoke-others", h.revokeOtherSessions)
-	e.POST("/sessions/:id/revoke", h.revokeSession)
+	e.POST("/logout", h.logout, protected)
+	e.POST("/logout-all", h.logoutAll, protected)
+	e.GET("/sessions", h.sessions, protected)
+	e.POST("/sessions/revoke-others", h.revokeOtherSessions, protected)
+	e.POST("/sessions/:id/revoke", h.revokeSession, protected)
 }
 
 func (h *handler) login(c *echo.Context) error {
@@ -83,7 +83,7 @@ func (h *handler) refreshToken(c *echo.Context) error {
 }
 
 func (h *handler) logout(c *echo.Context) error {
-	raw, err := bearerToken(c)
+	raw, err := accessToken(c)
 	if err != nil {
 		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Invalid token"})
 	}
@@ -101,7 +101,7 @@ func (h *handler) logout(c *echo.Context) error {
 }
 
 func (h *handler) logoutAll(c *echo.Context) error {
-	raw, err := bearerToken(c)
+	raw, err := accessToken(c)
 	if err != nil {
 		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Invalid token"})
 	}
@@ -119,7 +119,7 @@ func (h *handler) logoutAll(c *echo.Context) error {
 }
 
 func (h *handler) sessions(c *echo.Context) error {
-	raw, err := bearerToken(c)
+	raw, err := accessToken(c)
 	if err != nil {
 		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Invalid token"})
 	}
@@ -138,7 +138,7 @@ func (h *handler) sessions(c *echo.Context) error {
 }
 
 func (h *handler) revokeSession(c *echo.Context) error {
-	raw, err := bearerToken(c)
+	raw, err := accessToken(c)
 	if err != nil {
 		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Invalid token"})
 	}
@@ -166,7 +166,7 @@ func (h *handler) revokeSession(c *echo.Context) error {
 }
 
 func (h *handler) revokeOtherSessions(c *echo.Context) error {
-	raw, err := bearerToken(c)
+	raw, err := accessToken(c)
 	if err != nil {
 		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Invalid token"})
 	}
@@ -187,13 +187,12 @@ func clientFrom(c *echo.Context) usecases.Client {
 	return usecases.Client{IP: c.RealIP(), UserAgent: c.Request().UserAgent()}
 }
 
-func bearerToken(c *echo.Context) (string, error) {
-	header := c.Request().Header.Get("Authorization")
-	const prefix = "Bearer "
-	if !strings.HasPrefix(header, prefix) || strings.TrimSpace(header[len(prefix):]) == "" {
+func accessToken(c *echo.Context) (string, error) {
+	raw, ok := httpctx.AccessToken(c.Request().Context())
+	if !ok {
 		return "", usecases.ErrInvalidToken
 	}
-	return strings.TrimSpace(header[len(prefix):]), nil
+	return raw, nil
 }
 
 type loginRequest struct {

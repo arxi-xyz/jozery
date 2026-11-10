@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"jozery/internal/identity/db"
+	"jozery/internal/Domains/identity/db"
 )
 
 func Migrate(ctx context.Context, pool *pgxpool.Pool) error {

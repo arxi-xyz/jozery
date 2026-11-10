@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 
-	"jozery/internal/authentication/db"
-	"jozery/internal/authentication/entity"
+	"jozery/internal/Domains/authentication/db"
+	"jozery/internal/Domains/authentication/entity"
 )
 
 func (s *Service) Refresh(ctx context.Context, raw string) (*Session, error) {

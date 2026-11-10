@@ -4,12 +4,11 @@ import (
 	"context"
 	"errors"
 
-	"jozery/internal/identity/db"
+	"jozery/internal/Domains/identity/db"
 )
 
 var (
-	ErrUserExists   = errors.New("user already exists")
-	ErrInvalidToken = errors.New("invalid token")
+	ErrUserExists = errors.New("user already exists")
 )
 
 type Session struct {
@@ -24,7 +23,6 @@ type Client struct {
 
 type Tokens interface {
 	Login(ctx context.Context, username, password string, client Client) (Session, error)
-	UserID(ctx context.Context, accessToken string) (int64, error)
 }
 
 type Service struct {

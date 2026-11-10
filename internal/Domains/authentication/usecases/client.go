@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"jozery/internal/authentication/entity"
+	"jozery/internal/Domains/authentication/entity"
 )
 
 type Client struct {

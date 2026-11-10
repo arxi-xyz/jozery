@@ -3,12 +3,12 @@ package identity
 import (
 	"errors"
 	"net/http"
-	"strings"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v5"
-	"jozery/internal/identity/entity"
-	"jozery/internal/identity/usecases"
+	"jozery/internal/Domains/identity/entity"
+	"jozery/internal/Domains/identity/usecases"
+	"jozery/internal/httpctx"
 )
 
 type handler struct {
@@ -20,9 +20,9 @@ func newHandler(identity *usecases.Service) *handler {
 	return &handler{identity: identity, validate: validator.New()}
 }
 
-func (h *handler) register(e *echo.Echo) {
+func (h *handler) register(e *echo.Echo, protected echo.MiddlewareFunc) {
 	e.POST("/register", h.registerUser)
-	e.GET("/profile", h.profile)
+	e.GET("/profile", h.profile, protected)
 }
 
 func (h *handler) registerUser(c *echo.Context) error {
@@ -56,13 +56,13 @@ func (h *handler) registerUser(c *echo.Context) error {
 }
 
 func (h *handler) profile(c *echo.Context) error {
-	raw, err := bearerToken(c)
-	if err != nil {
+	userID, ok := httpctx.UserID(c.Request().Context())
+	if !ok {
 		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Invalid token"})
 	}
-	profile, err := h.identity.Profile(c.Request().Context(), raw)
-	if errors.Is(err, usecases.ErrInvalidToken) {
-		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Invalid token"})
+	profile, err := h.identity.Profile(c.Request().Context(), userID)
+	if errors.Is(err, ErrNotFound) {
+		return c.JSON(http.StatusNotFound, map[string]string{"error": "User not found"})
 	}
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
@@ -72,15 +72,6 @@ func (h *handler) profile(c *echo.Context) error {
 		Message: "Profile",
 		Data:    profile,
 	})
-}
-
-func bearerToken(c *echo.Context) (string, error) {
-	header := c.Request().Header.Get("Authorization")
-	const prefix = "Bearer "
-	if !strings.HasPrefix(header, prefix) || strings.TrimSpace(header[len(prefix):]) == "" {
-		return "", usecases.ErrInvalidToken
-	}
-	return strings.TrimSpace(header[len(prefix):]), nil
 }
 
 type registerRequest struct {

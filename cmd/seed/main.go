@@ -5,8 +5,8 @@ import (
 	"log"
 	"os"
 
-	"jozery/internal/identity/db"
-	"jozery/internal/identity/usecases"
+	"jozery/internal/Domains/identity/db"
+	"jozery/internal/Domains/identity/usecases"
 	"jozery/lib/db/pgsql"
 )
 

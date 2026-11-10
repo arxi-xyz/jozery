@@ -4,8 +4,7 @@ import (
 	"context"
 	"log"
 
-	"jozery/internal/authentication"
-	"jozery/internal/identity"
+	"jozery/internal/app"
 	"jozery/lib/db/pgsql"
 )
 
@@ -17,11 +16,8 @@ func main() {
 	}
 	defer pool.Close()
 
-	if err := identity.Migrate(ctx, pool); err != nil {
-		log.Fatalf("identity migrations: %v", err)
-	}
-	if err := authentication.Migrate(ctx, pool); err != nil {
-		log.Fatalf("authentication migrations: %v", err)
+	if err := app.Migrate(ctx, pool); err != nil {
+		log.Fatalf("migrate: %v", err)
 	}
 	log.Print("migrations applied")
 }

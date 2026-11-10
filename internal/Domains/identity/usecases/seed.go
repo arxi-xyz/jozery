@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 
-	"jozery/internal/identity/db"
-	"jozery/internal/identity/entity"
+	"jozery/internal/Domains/identity/db"
+	"jozery/internal/Domains/identity/entity"
 )
 
 func SeedAdmin(ctx context.Context, repo db.Repository, username, email, password string) (bool, error) {

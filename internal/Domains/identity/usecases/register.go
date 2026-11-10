@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 
-	"jozery/internal/identity/db"
-	"jozery/internal/identity/entity"
+	"jozery/internal/Domains/identity/db"
+	"jozery/internal/Domains/identity/entity"
 )
 
 func (s *Service) Register(ctx context.Context, username, email, password string, client Client) (*Session, error) {

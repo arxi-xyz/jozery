@@ -6,8 +6,8 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/labstack/echo/v5"
-	"jozery/internal/identity/db"
-	"jozery/internal/identity/usecases"
+	"jozery/internal/Domains/identity/db"
+	"jozery/internal/Domains/identity/usecases"
 )
 
 var ErrNotFound = db.ErrNotFound
@@ -18,14 +18,20 @@ type Credentials struct {
 }
 
 type Module struct {
-	repo db.Repository
+	repo    db.Repository
+	handler *handler
 }
 
-func New(e *echo.Echo, pool *pgxpool.Pool, tokens usecases.Tokens) *Module {
+func New(pool *pgxpool.Pool, tokens usecases.Tokens) *Module {
 	repo := db.New(pool)
-	module := &Module{repo: repo}
-	newHandler(usecases.New(repo, tokens)).register(e)
-	return module
+	return &Module{
+		repo:    repo,
+		handler: newHandler(usecases.New(repo, tokens)),
+	}
+}
+
+func (m *Module) Routes(e *echo.Echo, protected echo.MiddlewareFunc) {
+	m.handler.register(e, protected)
 }
 
 func (m *Module) FindCredentials(ctx context.Context, username string) (Credentials, error) {

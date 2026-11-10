@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"jozery/internal/authentication/entity"
+	"jozery/internal/Domains/authentication/entity"
 )
 
 func (s *Service) Login(ctx context.Context, username, password string, client Client) (*Session, error) {
